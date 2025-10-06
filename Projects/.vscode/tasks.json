@@ -1,0 +1,78 @@
+{
+  "version": "3.0.28",
+  "tasks": [
+    {
+      "label": "AI Environment: Run Current File",
+      "type": "shell",
+      "command": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "args": [
+        "${file}"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CONDA_DEFAULT_ENV": "AI2025",
+          "CONDA_PREFIX": "D:/AI_Environment/Miniconda/envs/AI2025",
+          "PATH": "D:/AI_Environment/Miniconda/envs/AI2025;D:/AI_Environment/Miniconda/envs/AI2025/Scripts;D:/AI_Environment/src;${env:PATH}",
+          "PYTHONPATH": "D:/AI_Environment/src"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "AI Environment: Open Main Menu",
+      "type": "shell",
+      "command": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "args": [
+        "D:/AI_Environment/activate_ai_env.py"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "D:/AI_Environment",
+        "env": {
+          "CONDA_DEFAULT_ENV": "AI2025",
+          "CONDA_PREFIX": "D:/AI_Environment/Miniconda/envs/AI2025"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "AI Environment: Test All Components",
+      "type": "shell",
+      "command": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "args": [
+        "D:/AI_Environment/activate_ai_env.py",
+        "test"
+      ],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "D:/AI_Environment"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

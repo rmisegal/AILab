@@ -1,0 +1,58 @@
+{
+  "version": "3.0.28",
+  "configurations": [
+    {
+      "name": "AI Environment: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "env": {
+        "CONDA_DEFAULT_ENV": "AI2025",
+        "CONDA_PREFIX": "D:/AI_Environment/Miniconda/envs/AI2025",
+        "PATH": "D:/AI_Environment/Miniconda/envs/AI2025;D:/AI_Environment/Miniconda/envs/AI2025/Scripts;D:/AI_Environment/src;${env:PATH}",
+        "PYTHONPATH": "D:/AI_Environment/src",
+        "AI_ENV_PATH": "D:/AI_Environment"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "stopOnEntry": false,
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "AI Environment: Main System",
+      "type": "python",
+      "request": "launch",
+      "program": "D:/AI_Environment/activate_ai_env.py",
+      "console": "integratedTerminal",
+      "cwd": "D:/AI_Environment",
+      "python": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "env": {
+        "CONDA_DEFAULT_ENV": "AI2025",
+        "CONDA_PREFIX": "D:/AI_Environment/Miniconda/envs/AI2025",
+        "PATH": "D:/AI_Environment/Miniconda/envs/AI2025;D:/AI_Environment/Miniconda/envs/AI2025/Scripts;D:/AI_Environment/src;${env:PATH}",
+        "PYTHONPATH": "D:/AI_Environment/src"
+      },
+      "stopOnEntry": false,
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "AI Environment: Test Components",
+      "type": "python",
+      "request": "launch",
+      "program": "D:/AI_Environment/activate_ai_env.py",
+      "args": [
+        "test"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "D:/AI_Environment",
+      "python": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "env": {
+        "CONDA_DEFAULT_ENV": "AI2025",
+        "CONDA_PREFIX": "D:/AI_Environment/Miniconda/envs/AI2025",
+        "PYTHONPATH": "D:/AI_Environment/src"
+      }
+    }
+  ]
+}

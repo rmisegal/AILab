@@ -1,0 +1,12 @@
+# AI Environment generated artifacts
+AI_Environment_v3.0.28/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.tmp
+*.bak
+*.zip
+*.7z
+*.tar
+*.tar.gz

@@ -1,0 +1,32 @@
+{
+  "ollama_server_component_setup": {
+    "name": "Ollama Server (Component Setup)",
+    "pid": 27328,
+    "command": "D:\\AI_Environment\\Ollama\\ollama.exe serve",
+    "started_at": "2025-08-14 20:04:17",
+    "status": "running",
+    "url": "http://127.0.0.1:11434"
+  },
+  "ollama_server_activation": {
+    "name": "Ollama Server (phi:2.7b)",
+    "pid": 27328,
+    "command": "ollama serve (model: phi:2.7b)",
+    "started_at": "2025-08-14 21:38:06",
+    "status": "running",
+    "url": "http://127.0.0.1:11434"
+  },
+  "vscode_ai_env_1755196734": {
+    "name": "VS Code (AI Environment)",
+    "pid": 27280,
+    "command": "D:\\AI_Environment\\VSCode\\Code.exe D:\\AI_Environment\\Projects --disable-telemetry --new-window D:\\AI_Environment\\Projects\\main.py",
+    "started_at": "2025-08-14 21:38:54",
+    "status": "running"
+  },
+  "conda_prompt_20250814_214311": {
+    "pid": 24604,
+    "name": "Conda Prompt",
+    "command": "start \"Conda Prompt - AI2025\" cmd /k \"D:\\AI_Environment\\Miniconda\\Scripts\\conda.exe activate AI2025\"",
+    "started_at": "2025-08-14T21:43:11.103924",
+    "type": "custom"
+  }
+}
