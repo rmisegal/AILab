@@ -30,7 +30,7 @@ from ai_conda_manager import CondaManager
 
 class ComponentTester:
     """Comprehensive testing of AI Environment components"""
-    
+
     def __init__(self, ai_env_path, conda_path):
         self.ai_env_path = Path(ai_env_path)
         self.conda_path = Path(conda_path)
@@ -57,33 +57,43 @@ class ComponentTester:
         """Test AI Environment directory structure"""
         if self.ai_env_path.exists():
             self.print_success("AI Environment directory found")
-            
-            # Check subdirectories - only essential ones
-            required_dirs = ["Miniconda"]
-            optional_dirs = ["AI_Installer", "Ollama"]
-            missing_dirs = []
-            
-            for dir_name in required_dirs:
-                if (self.ai_env_path / dir_name).exists():
-                    self.print_success(f"  ✓ {dir_name} directory found")
-                else:
-                    self.print_error(f"  ✗ {dir_name} directory missing")
-                    missing_dirs.append(dir_name)
-            
-            # Check optional directories
-            for dir_name in optional_dirs:
-                if (self.ai_env_path / dir_name).exists():
-                    self.print_success(f"  ✓ {dir_name} directory found (optional)")
-                else:
-                    self.print_info(f"  - {dir_name} directory not found (optional)")
-            
-            # Note: AI_Environment_Python is the current directory we're running from
-            
-            if not missing_dirs:
+
+            # Check for Miniconda (required) - check multiple locations
+            miniconda_found = False
+            if (self.ai_env_path / "Miniconda").exists():
+                self.print_success(f"  ✓ Miniconda directory found (portable)")
+                miniconda_found = True
+            elif (self.ai_env_path / "AI_Environment" / "Miniconda").exists():
+                self.print_success(f"  ✓ Miniconda directory found (in AI_Environment subfolder)")
+                miniconda_found = True
+            elif self.conda_path.exists():
+                self.print_success(f"  ✓ Miniconda found at: {self.conda_path}")
+                miniconda_found = True
+            else:
+                self.print_error(f"  ✗ Miniconda directory not found")
+
+            # Check for Ollama (optional) - check multiple locations
+            ollama_found = False
+            if (self.ai_env_path / "Ollama").exists():
+                self.print_success(f"  ✓ Ollama directory found (portable)")
+                ollama_found = True
+            elif (self.ai_env_path / "AI_Environment" / "Ollama").exists():
+                self.print_success(f"  ✓ Ollama directory found (in AI_Environment subfolder)")
+                ollama_found = True
+            else:
+                self.print_info(f"  - Ollama directory not found (optional)")
+
+            # Check other optional directories
+            if (self.ai_env_path / "AI_Installer").exists():
+                self.print_success(f"  ✓ AI_Installer directory found (optional)")
+            else:
+                self.print_info(f"  - AI_Installer directory not found (optional)")
+
+            if miniconda_found:
                 self.print_success("Directory structure test PASSED")
                 return True
             else:
-                self.print_error(f"Directory structure test FAILED - Missing: {missing_dirs}")
+                self.print_error(f"Directory structure test FAILED - Miniconda not found")
                 return False
         else:
             self.print_error("AI Environment directory not found")
@@ -211,44 +221,50 @@ class ComponentTester:
             
     def test_ollama_installation(self):
         """Test Ollama installation (optional)"""
-        ollama_path = self.ai_env_path / "Ollama"
-        if ollama_path.exists():
-            self.print_success("Ollama directory found")
-            
-            ollama_exe = ollama_path / "ollama.exe"
-            if ollama_exe.exists():
-                self.print_success("  ✓ ollama.exe found")
-                
-                try:
-                    # Try version command first
-                    result = subprocess.run([str(ollama_exe), "version"], 
-                                          capture_output=True, text=True, timeout=10)
-                    if result.returncode == 0:
-                        version_info = result.stdout.strip()
-                        self.print_success(f"  ✓ Ollama version: {version_info}")
-                        self.print_success("Ollama installation test PASSED")
+        # Check multiple locations for Ollama
+        ollama_exe = None
+
+        # 1. Check portable location
+        portable_ollama = self.ai_env_path / "Ollama" / "ollama.exe"
+        if portable_ollama.exists():
+            self.print_success("Ollama directory found (portable)")
+            ollama_exe = portable_ollama
+
+        # 2. Check AI_Environment subfolder
+        installer_ollama = self.ai_env_path / "AI_Environment" / "Ollama" / "ollama.exe"
+        if not ollama_exe and installer_ollama.exists():
+            self.print_success("Ollama directory found (in AI_Environment subfolder)")
+            ollama_exe = installer_ollama
+
+        if ollama_exe:
+            self.print_success("  ✓ ollama.exe found")
+
+            try:
+                # Try version command first
+                result = subprocess.run([str(ollama_exe), "version"],
+                                      capture_output=True, text=True, timeout=10)
+                if result.returncode == 0:
+                    version_info = result.stdout.strip()
+                    self.print_success(f"  ✓ Ollama version: {version_info}")
+                    self.print_success("Ollama installation test PASSED")
+                    return True
+                else:
+                    # Try alternative commands if version fails
+                    self.print_info("  - Version command failed, trying alternative check...")
+                    result2 = subprocess.run([str(ollama_exe), "--help"],
+                                            capture_output=True, text=True, timeout=5)
+                    if result2.returncode == 0:
+                        self.print_success("  ✓ Ollama executable responds to --help")
+                        self.print_success("Ollama installation test PASSED (basic)")
                         return True
                     else:
-                        # Try alternative commands if version fails
-                        self.print_info("  - Version command failed, trying alternative check...")
-                        result2 = subprocess.run([str(ollama_exe), "--help"], 
-                                                capture_output=True, text=True, timeout=5)
-                        if result2.returncode == 0:
-                            self.print_success("  ✓ Ollama executable responds to --help")
-                            self.print_success("Ollama installation test PASSED (basic)")
-                            return True
-                        else:
-                            self.print_error(f"  ✗ Ollama version check failed (exit code: {result.returncode})")
-                            if result.stderr:
-                                self.print_error(f"  ✗ Error output: {result.stderr.strip()}")
-                            self.print_error("Ollama installation test FAILED")
-                            return False
-                except Exception as e:
-                    self.print_error(f"  ✗ Ollama test error: {e}")
-                    self.print_error("Ollama installation test FAILED")
-                    return False
-            else:
-                self.print_error("  ✗ ollama.exe not found")
+                        self.print_error(f"  ✗ Ollama version check failed (exit code: {result.returncode})")
+                        if result.stderr:
+                            self.print_error(f"  ✗ Error output: {result.stderr.strip()}")
+                        self.print_error("Ollama installation test FAILED")
+                        return False
+            except Exception as e:
+                self.print_error(f"  ✗ Ollama test error: {e}")
                 self.print_error("Ollama installation test FAILED")
                 return False
         else:

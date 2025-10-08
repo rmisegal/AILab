@@ -131,20 +131,168 @@ from ai_action_handlers import ActionHandlers
 
 class AIEnvironmentActivator:
     """Main AI Environment activation and management system"""
-    
+
+    def _detect_miniconda_path(self):
+        """
+        Detect Miniconda installation location.
+        Priority order:
+        1. Portable: {ai_env_path}/Miniconda (preferred for portability)
+        2. Installer portable: {ai_env_path}/AI_Environment/Miniconda (when installer output is moved here)
+        3. PATH variable: Extract from 'where conda.exe'
+        4. User profile: %USERPROFILE%/Miniconda3 or miniconda3
+        5. System-wide: C:/ProgramData/Miniconda3 or miniconda3
+        """
+        import subprocess
+        import os
+
+        # 1. Check portable installation first (PRIORITY)
+        portable_path = self.ai_env_path / "Miniconda"
+        if (portable_path / "Scripts" / "conda.exe").exists():
+            if self.verbose:
+                print(f"{Fore.GREEN}[VERBOSE] Found portable Miniconda at: {portable_path}{Style.RESET_ALL}")
+            return portable_path
+
+        # 2. Check AI_Environment subfolder (installer output moved here)
+        installer_portable_path = self.ai_env_path / "AI_Environment" / "Miniconda"
+        if (installer_portable_path / "Scripts" / "conda.exe").exists():
+            if self.verbose:
+                print(f"{Fore.GREEN}[VERBOSE] Found Miniconda in AI_Environment at: {installer_portable_path}{Style.RESET_ALL}")
+            return installer_portable_path
+
+        # 3. Try to detect from PATH environment variable
+        try:
+            result = subprocess.run(['where', 'conda.exe'],
+                                  capture_output=True,
+                                  text=True,
+                                  timeout=5)
+            if result.returncode == 0:
+                conda_exe_path = result.stdout.strip().split('\n')[0].strip()
+                # Extract Miniconda root (remove \Scripts\conda.exe)
+                conda_path = Path(conda_exe_path).parent.parent
+                if self.verbose:
+                    print(f"{Fore.YELLOW}[VERBOSE] Found Miniconda in PATH at: {conda_path}{Style.RESET_ALL}")
+                return conda_path
+        except Exception as e:
+            if self.verbose:
+                print(f"{Fore.YELLOW}[VERBOSE] Could not detect from PATH: {e}{Style.RESET_ALL}")
+
+        # 3. Check common user profile locations
+        user_profile = Path(os.environ.get('USERPROFILE', ''))
+        for conda_dir in ['Miniconda3', 'miniconda3']:
+            conda_path = user_profile / conda_dir
+            if (conda_path / "Scripts" / "conda.exe").exists():
+                if self.verbose:
+                    print(f"{Fore.YELLOW}[VERBOSE] Found Miniconda at: {conda_path}{Style.RESET_ALL}")
+                return conda_path
+
+        # 4. Check common system-wide locations
+        for conda_dir in ['Miniconda3', 'miniconda3']:
+            conda_path = Path(f"C:/ProgramData/{conda_dir}")
+            if (conda_path / "Scripts" / "conda.exe").exists():
+                if self.verbose:
+                    print(f"{Fore.YELLOW}[VERBOSE] Found Miniconda at: {conda_path}{Style.RESET_ALL}")
+                return conda_path
+
+        # Default to portable location even if it doesn't exist (will be created during install)
+        if self.verbose:
+            print(f"{Fore.RED}[VERBOSE] Miniconda not found, defaulting to: {portable_path}{Style.RESET_ALL}")
+        return portable_path
+
+    def _detect_ollama_path(self):
+        """
+        Detect Ollama installation location.
+        Priority order:
+        1. Portable: {ai_env_path}/Ollama (preferred for portability)
+        2. Installer portable: {ai_env_path}/AI_Environment/Ollama (when installer output is moved here)
+        3. PATH variable: Extract from 'where ollama.exe'
+        4. User profile: %USERPROFILE%/Ollama or %LOCALAPPDATA%/Programs/Ollama
+        5. System-wide: C:/Program Files/Ollama
+        """
+        import subprocess
+        import os
+
+        # 1. Check portable installation first (PRIORITY)
+        portable_path = self.ai_env_path / "Ollama" / "ollama.exe"
+        if portable_path.exists():
+            if self.verbose:
+                print(f"{Fore.GREEN}[VERBOSE] Found portable Ollama at: {portable_path}{Style.RESET_ALL}")
+            return portable_path
+
+        # 2. Check AI_Environment subfolder (installer output moved here)
+        installer_portable_path = self.ai_env_path / "AI_Environment" / "Ollama" / "ollama.exe"
+        if installer_portable_path.exists():
+            if self.verbose:
+                print(f"{Fore.GREEN}[VERBOSE] Found Ollama in AI_Environment at: {installer_portable_path}{Style.RESET_ALL}")
+            return installer_portable_path
+
+        # 3. Try to detect from PATH environment variable
+        try:
+            result = subprocess.run(['where', 'ollama.exe'],
+                                  capture_output=True,
+                                  text=True,
+                                  timeout=5)
+            if result.returncode == 0:
+                ollama_exe_path = Path(result.stdout.strip().split('\n')[0].strip())
+                if self.verbose:
+                    print(f"{Fore.YELLOW}[VERBOSE] Found Ollama in PATH at: {ollama_exe_path}{Style.RESET_ALL}")
+                return ollama_exe_path
+        except Exception as e:
+            if self.verbose:
+                print(f"{Fore.YELLOW}[VERBOSE] Could not detect Ollama from PATH: {e}{Style.RESET_ALL}")
+
+        # 3. Check common user profile locations
+        user_profile = Path(os.environ.get('USERPROFILE', ''))
+        local_appdata = Path(os.environ.get('LOCALAPPDATA', ''))
+
+        user_locations = [
+            user_profile / "Ollama" / "ollama.exe",
+            local_appdata / "Programs" / "Ollama" / "ollama.exe",
+        ]
+
+        for ollama_path in user_locations:
+            if ollama_path.exists():
+                if self.verbose:
+                    print(f"{Fore.YELLOW}[VERBOSE] Found Ollama at: {ollama_path}{Style.RESET_ALL}")
+                return ollama_path
+
+        # 4. Check common system-wide locations
+        system_locations = [
+            Path("C:/Program Files/Ollama/ollama.exe"),
+            Path("C:/Program Files (x86)/Ollama/ollama.exe"),
+        ]
+
+        for ollama_path in system_locations:
+            if ollama_path.exists():
+                if self.verbose:
+                    print(f"{Fore.YELLOW}[VERBOSE] Found Ollama at: {ollama_path}{Style.RESET_ALL}")
+                return ollama_path
+
+        # Return None if not found (Ollama is optional)
+        if self.verbose:
+            print(f"{Fore.RED}[VERBOSE] Ollama not found, will use portable location: {portable_path}{Style.RESET_ALL}")
+        return portable_path
+
     def __init__(self, verbose=False):
         self.verbose = verbose
-        self.ai_env_path = Path("D:/AI_Environment")
-        self.conda_path = self.ai_env_path / "Miniconda"
-        
+        # Get the script's directory (src/) and go up one level to AI_Environment root
+        script_dir = Path(__file__).resolve().parent
+        self.ai_env_path = script_dir.parent
+
+        # Detect actual Miniconda location (portable first, then system)
+        self.conda_path = self._detect_miniconda_path()
+
+        # Detect actual Ollama location (portable first, then system)
+        self.ollama_path = self._detect_ollama_path()
+
         # Initialize subsystems
         self.menu_system = MenuSystem(SCRIPT_VERSION, SCRIPT_DATE)
-        self.action_handlers = ActionHandlers(self.ai_env_path, self.conda_path)
-        
+        self.action_handlers = ActionHandlers(self.ai_env_path, self.conda_path, self.ollama_path)
+
         if self.verbose:
             print(f"{Fore.CYAN}[VERBOSE] {__file__} v{SCRIPT_VERSION} ({SCRIPT_DATE}) starting{Style.RESET_ALL}")
             print(f"{Fore.CYAN}[VERBOSE] AI Environment path: {self.ai_env_path}{Style.RESET_ALL}")
             print(f"{Fore.CYAN}[VERBOSE] Conda path: {self.conda_path}{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}[VERBOSE] Ollama path: {self.ollama_path}{Style.RESET_ALL}")
             
     def print_info(self, message):
         """Print info message"""
