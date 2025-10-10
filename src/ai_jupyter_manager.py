@@ -48,7 +48,7 @@ class JupyterLabManager:
     
     def __init__(self, ai_env_path, conda_path):
         """Initialize Jupyter Lab manager
-        
+
         Args:
             ai_env_path (Path): Path to AI Environment directory
             conda_path (Path): Path to Miniconda installation
@@ -56,6 +56,7 @@ class JupyterLabManager:
         self.ai_env_path = Path(ai_env_path)
         self.conda_path = Path(conda_path)
         self.default_port = 8888
+        self.server_tokens = {}  # Store tokens for each port
         
     def print_success(self, message):
         """Print success message"""
@@ -72,6 +73,24 @@ class JupyterLabManager:
     def print_info(self, message):
         """Print info message"""
         print(f"{Fore.CYAN}ℹ️ {message}{Style.RESET_ALL}")
+
+    def extract_token_from_output(self, output, port):
+        """Extract Jupyter token from server output
+
+        Args:
+            output (str): Server output text
+            port (int): Port number to match
+
+        Returns:
+            str: Token string or None if not found
+        """
+        import re
+        # Look for token in URLs like http://localhost:8888/?token=abc123 or http://localhost:8888/lab?token=abc123
+        pattern = rf"http://[^:]+:{port}/?\S*\?token=([a-f0-9]+)"
+        match = re.search(pattern, output)
+        if match:
+            return match.group(1)
+        return None
 
     def show_menu(self):
         """Display Jupyter Lab management menu"""
@@ -123,13 +142,15 @@ class JupyterLabManager:
                 cmd = [
                     str(conda_path), "run", "-n", "AI2025",
                     "jupyter", "lab", "--no-browser", f"--port={port}",
-                    "--allow-root", "--ip=0.0.0.0"
+                    "--allow-root", "--ip=0.0.0.0",
+                    "--IdentityProvider.token=''"
                 ]
             else:  # Linux/Mac
                 cmd = [
                     "conda", "run", "-n", "AI2025",
                     "jupyter", "lab", "--no-browser", f"--port={port}",
-                    "--allow-root", "--ip=0.0.0.0"
+                    "--allow-root", "--ip=0.0.0.0",
+                    "--IdentityProvider.token=''"
                 ]
             
             self.print_info(f"Starting Jupyter Lab with command: {' '.join(cmd[:3])}...")
@@ -158,27 +179,35 @@ class JupyterLabManager:
                 self.print_info(f"Tracking Jupyter Lab server (PID: {process.pid})")
             except Exception as e:
                 self.print_warning(f"Could not track Jupyter process: {e}")
-            
+
             # Wait for server to start with retry mechanism
             self.print_info("Waiting for server to start...")
             max_wait_time = 15  # Maximum 15 seconds
             check_interval = 1  # Check every 1 second
             checks_performed = 0
-            
+
             for attempt in range(max_wait_time):
                 time.sleep(check_interval)
                 checks_performed += 1
-                
+
                 if self.is_server_running(port):
                     self.print_success(f"Jupyter Lab server started successfully on port {port} (after {checks_performed} seconds)")
                     self.print_info(f"Working directory: {projects_dir}")
-                    self.print_info(f"Access at: http://localhost:{port}")
+                    self.print_info(f"Access at: http://localhost:{port}/lab")
+
+                    # Update tracked process URL
+                    try:
+                        process_manager.tracked_processes[f"jupyter_lab_server_{port}"]['url'] = f"http://localhost:{port}/lab"
+                        process_manager.save_tracked_processes()
+                    except Exception:
+                        pass
+
                     return True
-                
+
                 # Show progress dots
                 if attempt % 3 == 0:
                     print(f"{Fore.YELLOW}.{Style.RESET_ALL}", end="", flush=True)
-            
+
             print()  # New line after dots
             
             # Final check - server might be starting but not ready yet
@@ -213,31 +242,31 @@ class JupyterLabManager:
 
     def start_client_only(self, port=None):
         """Start Jupyter Lab client only (open browser)
-        
+
         Args:
             port (int, optional): Port number to connect to. Defaults to 8888.
         """
         if port is None:
             port = self.default_port
-            
+
         print(f"\n{Fore.BLUE}🌐 Opening Jupyter Lab Client...{Style.RESET_ALL}")
-        
+
         # Check if server is running
         if not self.is_server_running(port):
             self.print_warning(f"Jupyter Lab server is not running on port {port}!")
             self.print_info("Please start the server first (option 1 or 3)")
             return False
-        
-        # Open browser to Jupyter Lab
+
+        # Open browser to Jupyter Lab (no authentication required)
         try:
-            url = f"http://localhost:{port}"
+            url = f"http://localhost:{port}/lab"
             webbrowser.open(url)
             self.print_success("Jupyter Lab client opened in browser")
             self.print_info(f"URL: {url}")
             return True
         except Exception as e:
             self.print_error(f"Failed to open browser: {e}")
-            self.print_info(f"Please manually open: http://localhost:{port}")
+            self.print_info(f"Please manually open: http://localhost:{port}/lab")
             return False
 
     def start_server_and_client(self, port=None):
@@ -432,9 +461,9 @@ class JupyterLabManager:
             # Fall back to killing processes on the port
             if PSUTIL_AVAILABLE:
                 import psutil
-                for proc in psutil.process_iter(['pid', 'name', 'connections']):
+                for proc in psutil.process_iter(['pid', 'name']):
                     try:
-                        connections = proc.info['connections']
+                        connections = proc.connections()
                         if connections:
                             for conn in connections:
                                 if conn.laddr.port == port:
