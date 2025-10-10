@@ -34,11 +34,15 @@ from ai_process_manager import BackgroundProcessManager
 
 class ActionHandlers:
     """Handles all menu actions for AI Environment"""
-    
-    def __init__(self, ai_env_path, conda_path):
+
+    def __init__(self, ai_env_path, conda_path, ollama_path=None):
         self.ai_env_path = Path(ai_env_path)
         self.conda_path = Path(conda_path)
-        self.ollama_manager = OllamaManager(ai_env_path)
+        # Use provided ollama_path or default to portable location
+        if ollama_path is None:
+            ollama_path = Path(ai_env_path) / "Ollama" / "ollama.exe"
+        self.ollama_path = Path(ollama_path)
+        self.ollama_manager = OllamaManager(ai_env_path, ollama_path)
         
     def print_step(self, step_num, description):
         """Print step header"""
@@ -96,7 +100,7 @@ class ActionHandlers:
             
             # Step 3: Setup components
             self.print_step(3, "Setting up components")
-            component_setup = ComponentSetup(self.ai_env_path)
+            component_setup = ComponentSetup(self.ai_env_path, self.ollama_path)
             if not component_setup.setup_all_components():
                 self.print_error("Component setup failed")
                 return False
@@ -105,10 +109,10 @@ class ActionHandlers:
             # Step 4: AI Model Selection and Loading
             self.print_step(4, "AI Model Selection")
             from ai_model_loader import ModelLoader
-            
+
             try:
                 model_loader = ModelLoader(
-                    self.ai_env_path / "Ollama" / "ollama.exe",
+                    self.ollama_path,
                     self.ai_env_path / "help"
                 )
                 
@@ -196,12 +200,12 @@ class ActionHandlers:
     def action_download_models(self):
         """Download AI models"""
         print(f"\n{Fore.MAGENTA}📥 AI Model Management...{Style.RESET_ALL}")
-        
+
         # Import and initialize AI model manager
         from ai_model_manager import AIModelManager
-        
+
         try:
-            model_manager = AIModelManager(self.ai_env_path, self.ai_env_path / "Ollama" / "ollama.exe")
+            model_manager = AIModelManager(self.ai_env_path, self.ollama_path)
             model_manager.run_interactive_menu()
             return True
         except Exception as e:

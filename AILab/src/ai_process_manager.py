@@ -60,13 +60,13 @@ class BackgroundProcessManager:
         
     def load_tracked_processes(self):
         """Load tracked processes from file"""
-        self.tracked_processes = {}
         try:
             if self.processes_file.exists():
                 with open(self.processes_file, 'r') as f:
-                    self.tracked_processes = json.load(f)
-                # Clean up dead processes on load
-                self.cleanup_dead_processes()
+                    data = json.load(f)
+                    self.tracked_processes = data
+                    # Clean up dead processes
+                    self.cleanup_dead_processes()
         except Exception as e:
             self.print_warning(f"Could not load process tracking file: {e}")
             self.tracked_processes = {}
@@ -74,21 +74,8 @@ class BackgroundProcessManager:
     def save_tracked_processes(self):
         """Save tracked processes to file"""
         try:
-            self.processes_file.parent.mkdir(parents=True, exist_ok=True)
             with open(self.processes_file, 'w') as f:
                 json.dump(self.tracked_processes, f, indent=2)
-        except Exception as e:
-            self.print_warning(f"Could not save process tracking file: {e}")
-            
-    
-def save_tracked_processes(self):
-        """Save tracked processes to file"""
-        try:
-            try:
-            with open(self.processes_file, 'w') as f:
-                json.dump(self.tracked_processes, f, indent=2)
-        except Exception as _e:
-            self.print_warning(f'Could not persist process list: {_e}')
         except Exception as e:
             self.print_warning(f"Could not save process tracking file: {e}")
             
@@ -113,6 +100,13 @@ def save_tracked_processes(self):
         """Track a background process"""
         try:
             from datetime import datetime
+
+            # Verify process exists before tracking
+            if PSUTIL_AVAILABLE:
+                if not psutil.pid_exists(pid):
+                    self.print_error(f"Process {name} (PID: {pid}) is not running")
+                    return False
+
             process_info = {
                 'name': name,
                 'pid': pid,
@@ -120,19 +114,18 @@ def save_tracked_processes(self):
                 'started_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 'status': 'running'
             }
+
             if url:
                 process_info['url'] = url
+
             self.tracked_processes[process_id] = process_info
             self.save_tracked_processes()
             self.print_success(f"Tracking process: {name} (PID: {pid})")
             return True
+
         except Exception as e:
             self.print_warning(f"Could not track process {name}: {e}")
             return False
-    ")
-            
-        except Exception as e:
-            self.print_warning(f"Could not track process {name}: {e}")
             
     def untrack_process(self, process_id):
         """Stop tracking a background process"""
@@ -190,7 +183,7 @@ def save_tracked_processes(self):
                 cmd,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW', shell=False) else 0
+                creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
             )
             
             # Track the process
@@ -350,7 +343,7 @@ if __name__ == "__main__":
                 ['jupyter', 'lab', '--no-browser', '--port=8888'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                cwd=str(work_dir, shell=False),
+                cwd=str(work_dir),
                 creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
             )
             
@@ -406,7 +399,7 @@ st.dataframe(data.head())
             self.print_info("Launching Streamlit demo in background...")
             
             process = subprocess.Popen(
-                ['streamlit', 'run', str(demo_file, shell=False), '--server.port=8501'],
+                ['streamlit', 'run', str(demo_file), '--server.port=8501'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
@@ -444,7 +437,7 @@ st.dataframe(data.head())
                 command,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                cwd=str(work_dir, shell=False),
+                cwd=str(work_dir),
                 shell=True,
                 creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
             )
@@ -467,18 +460,6 @@ st.dataframe(data.head())
             self.print_error(f"Failed to launch {name}: {e}")
             return False
             
-    
-    def is_process_tracked(self, process_id):
-        """Return True if process_id exists and PID looks alive."""
-        info = self.tracked_processes.get(process_id)
-        if not info:
-            return False
-        pid = info.get('pid')
-        try:
-            import psutil
-            return psutil.pid_exists(int(pid))
-        except Exception:
-            return True
     def list_background_processes(self):
         """List all tracked background processes"""
         self.cleanup_dead_processes()

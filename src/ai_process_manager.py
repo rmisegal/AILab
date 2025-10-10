@@ -100,7 +100,13 @@ class BackgroundProcessManager:
         """Track a background process"""
         try:
             from datetime import datetime
-            
+
+            # Verify process exists before tracking
+            if PSUTIL_AVAILABLE:
+                if not psutil.pid_exists(pid):
+                    self.print_error(f"Process {name} (PID: {pid}) is not running")
+                    return False
+
             process_info = {
                 'name': name,
                 'pid': pid,
@@ -108,16 +114,18 @@ class BackgroundProcessManager:
                 'started_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 'status': 'running'
             }
-            
+
             if url:
                 process_info['url'] = url
-                
+
             self.tracked_processes[process_id] = process_info
             self.save_tracked_processes()
             self.print_success(f"Tracking process: {name} (PID: {pid})")
-            
+            return True
+
         except Exception as e:
             self.print_warning(f"Could not track process {name}: {e}")
+            return False
             
     def untrack_process(self, process_id):
         """Stop tracking a background process"""
