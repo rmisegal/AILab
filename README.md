@@ -23,6 +23,155 @@ Before using this system, you **must** run the `install-0` setup script to insta
 
 ---
 
+## 📦 **Installation for External Hard Drives**
+
+This section is for users who want to run the AI Environment from an external hard drive (USB drive, external SSD, etc.) or want maximum portability across different computers.
+
+### **Two-Step Installation Process**
+
+The AI Environment uses a two-part setup:
+
+1. **AI_Environment_Installer** - Installs Miniconda, Ollama, VS Code, and AI models
+2. **AI_Lab** (this repository) - Management interface and tools
+
+These are separate because the installer creates large components (10-30 GB) that you may want to place on specific drives, while AI_Lab is lightweight and can be moved freely.
+
+---
+
+### **Step 1: Run the Installer**
+
+First, run the **AI_Environment_Installer** (install-0):
+
+```bash
+# Run as Administrator
+C:\AI_Environment_Installer-main\install.bat
+```
+
+**What it does:**
+- Prompts you to select a drive (C:, D:, E:, F:, etc.)
+- Creates `{DRIVE}:\AI_Environment` folder
+- Installs Miniconda, Ollama, VS Code, Python packages
+- Downloads AI models (optional)
+
+**For external drives:**
+- You can install to your external drive (e.g., E:\AI_Environment)
+- The installer will NOT add external drives to Windows PATH (this is intentional for reliability)
+- Your installation location is saved in `installation_status.json`
+
+---
+
+### **Step 2: Download AI_Lab**
+
+Download or clone this repository (AI_Lab):
+
+```bash
+git clone https://github.com/rmisegal/AILab.git
+```
+
+You can place AI_Lab anywhere:
+- Same drive as AI_Environment: `E:\AI_Lab`
+- Different drive: `F:\AI_Lab`
+- Desktop: `C:\Users\YourName\Desktop\AI_Lab`
+
+---
+
+### **Step 3: Integrate AI_Environment with AI_Lab**
+
+**Recommended Setup (For Maximum Portability):**
+
+Move the `AI_Environment` folder inside your `AI_Lab` folder:
+
+```
+Before:
+E:\AI_Environment\          ← Created by installer
+F:\AI_Lab\                  ← Downloaded from GitHub
+
+After:
+F:\AI_Lab\
+├── AI_Environment\         ← Moved here
+│   ├── Miniconda\
+│   ├── Ollama\
+│   ├── VSCode\
+│   └── Models\
+├── src\
+├── AILab\
+├── run_ai_env.bat
+└── ...
+```
+
+**To move the folder:**
+1. Cut `E:\AI_Environment`
+2. Paste into `F:\AI_Lab\` directory
+3. You now have `F:\AI_Lab\AI_Environment\`
+
+**Benefits:**
+- ✅ Everything in one folder - easy to backup or move
+- ✅ Fully portable - copy entire `AI_Lab` folder to any drive/computer
+- ✅ Automatic detection - AI_Lab will find Ollama and Miniconda automatically
+- ✅ No PATH configuration needed
+- ✅ No drive letter dependencies
+
+---
+
+### **Step 4: Launch AI_Lab**
+
+Run the launcher from your AI_Lab folder:
+
+```bash
+F:\AI_Lab\run_ai_env.bat
+```
+
+The system will automatically detect:
+- Miniconda at `F:\AI_Lab\AI_Environment\Miniconda\`
+- Ollama at `F:\AI_Lab\AI_Environment\Ollama\`
+- All other components
+
+---
+
+### **Why External Drives Make PATH Detection Difficult**
+
+External hard drives are **not added to Windows PATH** by installers because:
+
+1. **Removable**: External drives can be disconnected, causing PATH entries to break
+2. **Dynamic drive letters**: E:\ today might become F:\ tomorrow when you plug in devices in different order
+3. **Not always present**: External drives aren't guaranteed to be available at Windows startup
+
+The external drive location `E:\AI_Environment` was invisible to our detection because it wasn't in Windows PATH (installers avoid adding removable drives to PATH due to reliability issues). By moving it into the `AI_Lab` folder structure, the system uses **relative paths** to find everything automatically, regardless of which drive you're on.
+
+---
+
+### **Alternative: Keep AI_Environment Separate**
+
+If you prefer to keep AI_Environment on a separate drive, the system can still find it if:
+
+1. **Miniconda is in Windows PATH** (common for system-wide installs)
+2. **Or** you're using a system-wide Miniconda installation (e.g., `C:\ProgramData\miniconda3`)
+
+The detection system checks these locations in order:
+1. Portable: `{AI_Lab}\Miniconda` or `{AI_Lab}\Ollama`
+2. Installer subfolder: `{AI_Lab}\AI_Environment\Miniconda` or `{AI_Lab}\AI_Environment\Ollama`
+3. Windows PATH
+4. User profile locations
+5. System-wide locations
+
+---
+
+### **Troubleshooting External Drive Installations**
+
+**"Miniconda not found"**
+- Move `AI_Environment\Miniconda` into your `AI_Lab\AI_Environment\` folder
+- Or ensure Miniconda is in Windows PATH
+
+**"Ollama not found"**
+- Move `AI_Environment\Ollama` into your `AI_Lab\AI_Environment\` folder
+- The system will automatically detect it there
+
+**Drive letter changed**
+- No problem! Because everything uses relative paths, AI_Lab works on any drive
+- Just make sure AI_Environment is inside AI_Lab
+
+---
+
 ## 🎯 **Core Features**
 
 ### **1. Interactive Menu System**
