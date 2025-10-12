@@ -16,7 +16,7 @@ try:
     from colorama import Fore, Style
 except ImportError:
     class Fore:
-        GREEN = RED = YELLOW = CYAN = BLUE = MAGENTA = WHITE = ""
+        GREEN = RED = YELLOW = CYAN = BLUE = MAGENTA = WHITE = LIGHTBLACK_EX = ""
     class Style:
         RESET_ALL = ""
 
@@ -118,7 +118,7 @@ class ModelDownloader:
         
         for key, model in self.popular_models.items():
             print(f" {key}. {model['display_name']} ({model['size']})")
-            print(f"    {Fore.GRAY}{model['description']}{Style.RESET_ALL}")
+            print(f"    {Fore.LIGHTBLACK_EX}{model['description']}{Style.RESET_ALL}")
         
         try:
             choice = input(f"\n{Fore.YELLOW}Select model (1-{len(self.popular_models)}) or 0 to cancel: {Style.RESET_ALL}")
@@ -196,7 +196,8 @@ class ModelDownloader:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                universal_newlines=True
+                encoding='utf-8',
+                errors='replace'
             )
             
             # Show progress

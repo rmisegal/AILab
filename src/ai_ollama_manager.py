@@ -32,11 +32,44 @@ except ImportError:
 
 class OllamaManager:
     """Manages Ollama server lifecycle and operations"""
-    
-    def __init__(self, ai_env_path):
+
+    def __init__(self, ai_env_path, ollama_path=None):
         self.ai_env_path = Path(ai_env_path)
-        self.ollama_exe = self.ai_env_path / "Ollama" / "ollama.exe"
+        # Use provided ollama_path or default to portable location
+        if ollama_path is None:
+            ollama_path = Path(ai_env_path) / "Ollama" / "ollama.exe"
+        self.ollama_exe = Path(ollama_path)
         self.process = None
+
+    def find_models_directory(self):
+        """Find Ollama models directory using multiple detection methods
+
+        Returns:
+            Path: Path to models directory, or None if not found
+        """
+        # Check multiple possible locations in priority order
+        possible_paths = [
+            self.ai_env_path / "AI_Environment" / "Models",        # Inside AI_Environment subfolder (check first)
+            self.ai_env_path / "Models",                           # Direct in AI_Lab
+            self.ai_env_path.parent / "AI_Environment" / "Models", # Sibling directory
+        ]
+
+        for path in possible_paths:
+            if path.exists() and path.is_dir():
+                # Verify this directory actually contains models by checking for blobs
+                blobs_dir = path / "blobs"
+                if blobs_dir.exists() and any(blobs_dir.iterdir()):
+                    return path
+
+        # If no existing directory with models found, check for any existing empty directories
+        for path in possible_paths:
+            if path.exists() and path.is_dir():
+                return path
+
+        # If no existing directory found, create in AI_Environment subfolder
+        default_path = self.ai_env_path / "AI_Environment" / "Models"
+        default_path.mkdir(parents=True, exist_ok=True)
+        return default_path
         
     def print_info(self, message):
         """Print info message"""
@@ -117,16 +150,26 @@ class OllamaManager:
         try:
             if not self.check_ollama_exists():
                 return False
-                
+
             if self.is_ollama_running():
                 self.print_warning("Ollama server is already running")
                 return True
-                
+
             self.print_info("Starting Ollama server in background...")
-            
+
+            # Find and set models directory
+            models_path = self.find_models_directory()
+            self.print_info(f"Using models directory: {models_path}")
+
+            # Prepare environment with OLLAMA_MODELS variable
+            import os
+            env = os.environ.copy()
+            env['OLLAMA_MODELS'] = str(models_path)
+
             # Start Ollama server as background process
             self.process = subprocess.Popen(
                 [str(self.ollama_exe), 'serve'],
+                env=env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
