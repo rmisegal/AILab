@@ -370,6 +370,22 @@ if __name__ == "__main__":
     def launch_streamlit_demo(self):
         """Launch Streamlit demo app in background"""
         try:
+            # Check for existing Streamlit processes and kill them
+            import psutil
+            for proc_id, proc_info in list(self.tracked_processes.items()):
+                if 'streamlit' in proc_id.lower() and proc_info.get('type') == 'web_service':
+                    try:
+                        pid = proc_info.get('pid')
+                        if pid and psutil.pid_exists(pid):
+                            self.print_info(f"Stopping existing Streamlit process (PID: {pid})...")
+                            psutil.Process(pid).terminate()
+                            time.sleep(1)  # Give it time to terminate
+                        # Remove from tracking
+                        del self.tracked_processes[proc_id]
+                    except Exception:
+                        pass
+            self.save_tracked_processes()
+
             # Create a simple demo app if it doesn't exist
             demo_file = self.ai_env_path / "Projects" / "streamlit_demo.py"
             if not demo_file.exists():
@@ -402,6 +418,7 @@ st.dataframe(data.head())
                 ['streamlit', 'run', str(demo_file), '--server.port=8501'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
             )
             

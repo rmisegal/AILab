@@ -27,10 +27,66 @@ set "AI_ENV_PATH=%~dp0"
 :: Remove trailing backslash
 if "%AI_ENV_PATH:~-1%"=="\" set "AI_ENV_PATH=%AI_ENV_PATH:~0,-1%"
 
-set "CONDA_PATH=%AI_ENV_PATH%\Miniconda"
+:: Search for Miniconda installation
+set "CONDA_PATH="
+
+:: 1. Check relative path (./Miniconda)
+if exist "%AI_ENV_PATH%\Miniconda\Scripts\conda.exe" (
+    set "CONDA_PATH=%AI_ENV_PATH%\Miniconda"
+)
+
+:: 2. Check AI_Environment subfolder
+if not defined CONDA_PATH (
+    if exist "%AI_ENV_PATH%\AI_Environment\Miniconda\Scripts\conda.exe" (
+        set "CONDA_PATH=%AI_ENV_PATH%\AI_Environment\Miniconda"
+    )
+)
+
+:: 3. Try to detect from PATH environment variable
+if not defined CONDA_PATH (
+    for /f "tokens=*" %%i in ('where conda.exe 2^>nul') do (
+        if not defined CONDA_PATH (
+            for %%a in ("%%i\..\..") do (
+                if exist "%%~fa\Scripts\conda.exe" (
+                    set "CONDA_PATH=%%~fa"
+                )
+            )
+        )
+    )
+)
+
+:: 4. Check common system-wide installation locations
+if not defined CONDA_PATH (
+    if exist "C:\ProgramData\miniconda3\Scripts\conda.exe" set "CONDA_PATH=C:\ProgramData\miniconda3"
+)
+if not defined CONDA_PATH (
+    if exist "C:\ProgramData\Miniconda3\Scripts\conda.exe" set "CONDA_PATH=C:\ProgramData\Miniconda3"
+)
+if not defined CONDA_PATH (
+    if exist "%USERPROFILE%\miniconda3\Scripts\conda.exe" set "CONDA_PATH=%USERPROFILE%\miniconda3"
+)
+if not defined CONDA_PATH (
+    if exist "%USERPROFILE%\Miniconda3\Scripts\conda.exe" set "CONDA_PATH=%USERPROFILE%\Miniconda3"
+)
+
 set "CONDA_EXE=%CONDA_PATH%\Scripts\conda.exe"
 set "CONDA_ACTIVATE=%CONDA_PATH%\Scripts\activate.bat"
-set "OLLAMA_PATH=%AI_ENV_PATH%\Ollama"
+
+:: Search for Ollama installation
+set "OLLAMA_PATH="
+
+:: 1. Check relative path (./Ollama)
+if exist "%AI_ENV_PATH%\Ollama\ollama.exe" (
+    set "OLLAMA_PATH=%AI_ENV_PATH%\Ollama"
+)
+
+:: 2. Check AI_Environment subfolder
+if not defined OLLAMA_PATH (
+    if exist "%AI_ENV_PATH%\AI_Environment\Ollama\ollama.exe" (
+        set "OLLAMA_PATH=%AI_ENV_PATH%\AI_Environment\Ollama"
+    )
+)
+
 set "OLLAMA_EXE=%OLLAMA_PATH%\ollama.exe"
 
 :: Check if AI Environment exists

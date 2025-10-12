@@ -40,23 +40,26 @@ if exist "%AI_ENV_PATH%\Miniconda\Scripts\conda.exe" (
     if "%VERBOSE_MODE%"=="1" echo [VERBOSE] Found Miniconda at: %AI_ENV_PATH%\Miniconda
 )
 
-:: 2. Try to detect from PATH environment variable
+:: 2. Check AI_Environment subfolder
 if not defined CONDA_PATH (
-    where conda.exe >nul 2>&1
-    if not errorlevel 1 (
-        for /f "tokens=*" %%i in ('where conda.exe 2^>nul ^| findstr /i "conda.exe"') do (
-            set "CONDA_EXE_PATH=%%i"
-            if "%VERBOSE_MODE%"=="1" echo [VERBOSE] Found conda.exe at: %%i
-            goto :found_conda
-        )
-        :found_conda
-        :: Extract directory path (remove \Scripts\conda.exe)
-        for %%a in ("!CONDA_EXE_PATH!\..\..") do set "CONDA_PATH=%%~fa"
-        if "%VERBOSE_MODE%"=="1" echo [VERBOSE] Detected Miniconda at: !CONDA_PATH!
+    if exist "%AI_ENV_PATH%\AI_Environment\Miniconda\Scripts\conda.exe" (
+        set "CONDA_PATH=%AI_ENV_PATH%\AI_Environment\Miniconda"
+        if "%VERBOSE_MODE%"=="1" echo [VERBOSE] Found Miniconda at: %AI_ENV_PATH%\AI_Environment\Miniconda
     )
 )
 
-:: 3. Check common installation locations as fallback
+:: 3. Try to detect from PATH environment variable
+if not defined CONDA_PATH (
+    for /f "tokens=*" %%i in ('where conda.exe 2^>nul') do (
+        if not defined CONDA_PATH (
+            :: Extract parent directory from conda.exe path
+            set "TEMP_CONDA=%%i"
+            call :extract_conda_path "!TEMP_CONDA!"
+        )
+    )
+)
+
+:: 4. Check common system-wide installation locations as fallback
 if not defined CONDA_PATH (
     if exist "%USERPROFILE%\Miniconda3\Scripts\conda.exe" (
         set "CONDA_PATH=%USERPROFILE%\Miniconda3"
@@ -276,6 +279,22 @@ endlocal & (
     set "AI_PYTHON_EXE=%PYTHON_EXE%"
     set "AI_ENV_READY=1"
 )
+
+goto :eof
+
+:: Subroutine to extract conda path from conda.exe location
+:extract_conda_path
+setlocal
+set "CONDA_EXE_FULL=%~1"
+:: Get parent of Scripts directory (go up 2 levels from conda.exe)
+for %%a in ("%CONDA_EXE_FULL%\..\..") do set "EXTRACTED_PATH=%%~fa"
+if exist "%EXTRACTED_PATH%\Scripts\conda.exe" (
+    endlocal & set "CONDA_PATH=%EXTRACTED_PATH%"
+    if "%VERBOSE_MODE%"=="1" echo [VERBOSE] Detected Miniconda at: %EXTRACTED_PATH%
+) else (
+    endlocal
+)
+goto :eof
 
 
 

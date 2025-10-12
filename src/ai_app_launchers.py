@@ -67,23 +67,50 @@ class AppLaunchers:
     def launch_streamlit_demo(self):
         """Launch Streamlit demo application"""
         print(f"\n{Fore.BLUE}🌟 Launching Streamlit Demo...{Style.RESET_ALL}")
-        
+
         success = self.process_manager.launch_streamlit_demo()
         if success:
             self.print_info("Streamlit demo is now running in background")
             self.print_info("Use 'Background Processes' menu to manage it")
-            
+
             # Ask if user wants to open browser
             try:
-                open_browser = input(f"\n{Fore.CYAN}Open Streamlit demo in browser? (y/n): {Style.RESET_ALL}").lower()
+                open_browser = input(f"\n{Fore.CYAN}Open Streamlit demo in browser? (y/n): {Style.RESET_ALL}").lower().strip()
                 if open_browser in ['y', 'yes']:
-                    time.sleep(3)  # Wait for server to start
+                    self.print_info("Waiting for Streamlit server to initialize...")
+                    # Wait longer for Streamlit to start (it's slower than Jupyter)
+                    max_wait = 15
+                    port_found = False
+                    for i in range(max_wait):
+                        time.sleep(1)
+                        if self._is_port_in_use(8501):
+                            port_found = True
+                            # Give it 2 more seconds after port opens for app to fully initialize
+                            self.print_info("Server responding, finalizing startup...")
+                            time.sleep(2)
+                            break
+                        if i % 2 == 0:
+                            print(f"{Fore.YELLOW}.{Style.RESET_ALL}", end="", flush=True)
+                    print()  # New line after dots
+
+                    if not port_found:
+                        self.print_warning("Server took longer than expected to start")
+                        self.print_info("Opening browser anyway - you may need to refresh")
+
                     webbrowser.open('http://localhost:8501')
                     self.print_success("Streamlit demo opened in browser")
-            except:
-                pass
-                
+            except KeyboardInterrupt:
+                self.print_info("Browser launch cancelled")
+            except Exception as e:
+                self.print_warning(f"Could not open browser: {e}")
+
         return success
+
+    def _is_port_in_use(self, port):
+        """Check if a port is in use"""
+        import socket
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(('localhost', port)) == 0
         
     def launch_python_repl(self):
         """Launch Python REPL in new terminal"""
