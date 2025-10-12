@@ -171,7 +171,7 @@ class ActionHandlers:
     def action_restore_path(self):
         """Restore original PATH"""
         print(f"\n{Fore.YELLOW}🧹 Restoring Original PATH...{Style.RESET_ALL}")
-        path_manager = PathManager()
+        path_manager = PathManager(self.ai_env_path)
         return path_manager.restore_original_path()
         
     def action_activate_conda(self):
@@ -249,11 +249,11 @@ class ActionHandlers:
             elif choice == 4:  # Conda Prompt
                 success = app_launcher.launch_conda_prompt()
             elif choice == 5:  # Streamlit
-                success = app_launcher.launch_streamlit()
+                success = app_launcher.launch_streamlit_demo()
             elif choice == 6:  # TensorBoard
                 success = app_launcher.launch_tensorboard()
             elif choice == 7:  # MLflow
-                success = app_launcher.launch_mlflow()
+                success = app_launcher.launch_mlflow_ui()
             elif choice == 8:  # File Explorer
                 success = app_launcher.launch_file_explorer()
             else:
@@ -493,10 +493,10 @@ class ActionHandlers:
             print(f"{Fore.CYAN}{'='*60}{Style.RESET_ALL}")
             
             # Create terminal launcher
-            terminal_launcher = TerminalLauncher(self.ai_env_path, self.conda_path)
+            terminal_launcher = TerminalLauncher(self.ai_env_path)
             
             # Launch the terminal
-            success = terminal_launcher.launch_ai2025_terminal()
+            success = terminal_launcher.launch_terminal()
             
             if success:
                 self.print_success("AI2025 terminal session completed")

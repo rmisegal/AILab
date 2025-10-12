@@ -25,11 +25,17 @@ except ImportError:
 
 class PathManager:
     """Manages Windows PATH variable for AI Environment"""
-    
-    def __init__(self):
+
+    def __init__(self, ai_env_path=None):
+        """Initialize PATH manager
+
+        Args:
+            ai_env_path (str): Path to AI Environment installation (optional)
+        """
+        self.ai_env_path = Path(ai_env_path).resolve() if ai_env_path else None
         self.essential_paths = [
             "C:\\Windows\\System32",
-            "C:\\Windows", 
+            "C:\\Windows",
             "C:\\Windows\\System32\\Wbem",
             "C:\\Windows\\System32\\WindowsPowerShell\\v1.0",
             "C:\\Windows\\System32\\OpenSSH",
@@ -55,7 +61,33 @@ class PathManager:
         
     def is_ai_environment_path(self, path):
         """Check if path is related to AI Environment"""
-        return "D:\\AI_Environment" in path.upper()
+        path_upper = path.upper()
+
+        # If we have the actual AI environment path, check against it
+        if self.ai_env_path:
+            ai_env_str = str(self.ai_env_path).upper()
+            if ai_env_str in path_upper:
+                return True
+
+        # Check for common AI Environment related patterns
+        ai_patterns = [
+            "MINICONDA",
+            "ANACONDA",
+            "OLLAMA",
+            "\\AI_ENVIRONMENT",
+            "\\AI2025"
+        ]
+
+        # Check if path contains any AI-related patterns
+        for pattern in ai_patterns:
+            if pattern in path_upper:
+                # Additional check: verify it's not a system-wide installation
+                # Allow system-wide installations in C:\ProgramData or user profile
+                if "C:\\PROGRAMDATA" in path_upper or "C:\\USERS" in path_upper:
+                    continue
+                return True
+
+        return False
         
     def filter_clean_paths(self, current_path):
         """Filter out AI Environment paths, keep essential Windows paths"""
@@ -132,20 +164,32 @@ class PathManager:
     def restore_original_path(self):
         """Restore original Windows PATH without AI Environment entries"""
         try:
-            self.print_info("Current PATH contains D: drive paths - cleaning...")
-            
+            if self.ai_env_path:
+                self.print_info(f"Cleaning AI Environment paths from: {self.ai_env_path}")
+            else:
+                self.print_info("Cleaning AI Environment related paths from PATH...")
+
             # Get current PATH
             current_path = self.get_current_path()
-            
+
+            # Count paths before filtering
+            original_count = len([p for p in current_path.split(';') if p.strip()])
+
             # Filter out AI Environment paths
             clean_paths = self.filter_clean_paths(current_path)
-            
+
+            # Count how many were removed
+            removed_count = original_count - len(clean_paths)
+
             # Set cleaned PATH
             new_path = ';'.join(clean_paths)
             os.environ['PATH'] = new_path
-            
+
             self.print_success("Original Windows PATH restored")
-            self.print_info("All D:\\AI_Environment paths removed")
+            if removed_count > 0:
+                self.print_info(f"Removed {removed_count} AI Environment path(s)")
+            else:
+                self.print_info("No AI Environment paths found in PATH")
             
             # Test basic Windows commands
             self.print_info("Testing basic Windows commands...")

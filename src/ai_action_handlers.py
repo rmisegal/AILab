@@ -171,7 +171,7 @@ class ActionHandlers:
     def action_restore_path(self):
         """Restore original PATH"""
         print(f"\n{Fore.YELLOW}🧹 Restoring Original PATH...{Style.RESET_ALL}")
-        path_manager = PathManager()
+        path_manager = PathManager(self.ai_env_path)
         return path_manager.restore_original_path()
         
     def action_activate_conda(self):
