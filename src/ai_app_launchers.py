@@ -138,10 +138,31 @@ class AppLaunchers:
     def launch_conda_prompt(self):
         """Launch Conda prompt in new terminal"""
         print(f"\n{Fore.BLUE}🔧 Launching Conda Prompt...{Style.RESET_ALL}")
-        
+
         try:
+            # Find conda executable - check multiple locations
+            conda_locations = [
+                Path("C:/ProgramData/miniconda3/Scripts/conda.exe"),
+                Path("C:/ProgramData/Miniconda3/Scripts/conda.exe"),
+                self.ai_env_path / "Miniconda" / "Scripts" / "conda.exe",
+                Path.home() / "miniconda3" / "Scripts" / "conda.exe",
+                Path.home() / "anaconda3" / "Scripts" / "conda.exe",
+            ]
+
+            conda_exe = None
+            for location in conda_locations:
+                if location.exists():
+                    conda_exe = location
+                    break
+
+            if not conda_exe:
+                self.print_error("Conda executable not found!")
+                self.print_info("Checked locations:")
+                for loc in conda_locations:
+                    self.print_info(f"  - {loc}")
+                return False
+
             # Activate conda environment and open prompt
-            conda_exe = self.ai_env_path / "Miniconda" / "Scripts" / "conda.exe"
             cmd = f'start "Conda Prompt - AI2025" cmd /k "{conda_exe} activate AI2025"'
             
             success = self.process_manager.launch_custom_command(

@@ -21,6 +21,39 @@ current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 sys.path.insert(0, str(current_dir / "src"))
 
+# Universal path detection - works regardless of installation location
+def get_ai_environment_path():
+    """
+    Dynamically detect AI_Environment path based on script location.
+    This works universally regardless of where AI_Environment is installed.
+
+    Returns:
+        Path: The absolute path to AI_Environment directory
+    """
+    # This script (activate_ai_env.py) is located in the AI_Environment root
+    # So parent directory of this script IS the AI_Environment path
+    script_path = Path(__file__).resolve()
+    ai_env_path = script_path.parent
+
+    # Verify this is actually the AI_Environment directory by checking for key files/folders
+    expected_items = ['src', 'Projects', 'activate_ai_env.py']
+    if all((ai_env_path / item).exists() for item in expected_items):
+        return ai_env_path
+
+    # Fallback: search for AI_Environment folder
+    # Check if we're inside AI_Lab or similar parent folder
+    if 'AI_Environment' in str(ai_env_path):
+        # Already in AI_Environment or subfolder
+        parts = ai_env_path.parts
+        for i, part in enumerate(parts):
+            if part == 'AI_Environment':
+                return Path(*parts[:i+1])
+
+    # Last resort: return current directory
+    return ai_env_path
+
+AI_ENVIRONMENT_PATH = get_ai_environment_path()
+
 try:
     import colorama
     from colorama import Fore, Style
@@ -37,10 +70,11 @@ from ai_action_handlers import ActionHandlers
 
 class AIEnvironmentActivator:
     """Main AI Environment activation and management system"""
-    
+
     def __init__(self, verbose=False):
         self.verbose = verbose
-        self.ai_env_path = Path("D:/AI_Environment")
+        # Use dynamically detected path instead of hardcoded path
+        self.ai_env_path = AI_ENVIRONMENT_PATH
         self.conda_path = self.ai_env_path / "Miniconda"
         
         # Initialize subsystems

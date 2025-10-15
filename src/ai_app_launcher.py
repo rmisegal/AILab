@@ -28,6 +28,34 @@ from ai_vscode_config import VSCodeConfigManager
 from ai_app_launchers import AppLaunchers
 from ai_launcher_menu import LauncherMenu
 
+# Universal path detection - works regardless of installation location
+def get_ai_environment_path():
+    """
+    Dynamically detect AI_Environment path based on script location.
+    This module is in src/ subdirectory, so go up one level to get AI_Environment root.
+
+    Returns:
+        Path: The absolute path to AI_Environment directory
+    """
+    # This script is in src/ folder, so parent's parent is AI_Environment
+    script_path = Path(__file__).resolve()
+    ai_env_path = script_path.parent.parent
+
+    # Verify this is actually the AI_Environment directory
+    expected_items = ['src', 'Projects', 'activate_ai_env.py']
+    if all((ai_env_path / item).exists() for item in expected_items):
+        return ai_env_path
+
+    # Fallback: search for AI_Environment folder in path
+    if 'AI_Environment' in str(ai_env_path):
+        parts = ai_env_path.parts
+        for i, part in enumerate(parts):
+            if part == 'AI_Environment':
+                return Path(*parts[:i+1])
+
+    # Last resort: return calculated path
+    return ai_env_path
+
 class ApplicationLauncher:
     """Launches and manages various AI development applications"""
     
@@ -238,7 +266,8 @@ class ApplicationLauncher:
 
 def main():
     """Test application launcher"""
-    ai_env_path = Path("D:/AI_Environment")
+    # Use dynamic path detection instead of hardcoded path
+    ai_env_path = get_ai_environment_path()
     app_launcher = ApplicationLauncher(ai_env_path)
     
     print("Testing Enhanced Application Launcher with AI Environment v3.0.26 integration...")
