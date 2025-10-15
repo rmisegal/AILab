@@ -28,10 +28,29 @@ except ImportError:
 
 class TerminalLauncher:
     """Launches AI2025 terminal with enhanced functionality"""
-    
+
     def __init__(self, ai_env_path):
         self.ai_env_path = Path(ai_env_path)
-        self.conda_path = self.ai_env_path / "Miniconda"
+
+        # Find conda installation - check multiple locations
+        conda_locations = [
+            Path("C:/ProgramData/miniconda3"),
+            Path("C:/ProgramData/Miniconda3"),
+            self.ai_env_path / "Miniconda",
+            Path.home() / "miniconda3",
+            Path.home() / "anaconda3",
+        ]
+
+        self.conda_path = None
+        for location in conda_locations:
+            if (location / "Scripts" / "activate.bat").exists():
+                self.conda_path = location
+                break
+
+        if not self.conda_path:
+            # Fallback to first location (will show error later)
+            self.conda_path = self.ai_env_path / "Miniconda"
+
         self.activate_script = self.conda_path / "Scripts" / "activate.bat"
         
     def create_terminal_script(self):
@@ -101,11 +120,27 @@ cmd /k
     def launch_terminal(self):
         """Launch enhanced AI2025 terminal"""
         try:
+            # Verify conda was found
+            if not self.activate_script.exists():
+                print(f"{Fore.RED}[ERROR] Conda activation script not found!")
+                print(f"{Fore.YELLOW}[INFO] Searched locations:")
+                conda_locations = [
+                    Path("C:/ProgramData/miniconda3"),
+                    Path("C:/ProgramData/Miniconda3"),
+                    self.ai_env_path / "Miniconda",
+                    Path.home() / "miniconda3",
+                    Path.home() / "anaconda3",
+                ]
+                for loc in conda_locations:
+                    print(f"{Fore.YELLOW}  - {loc / 'Scripts' / 'activate.bat'}")
+                return False
+
             print(f"{Fore.CYAN}🚀 Launching AI2025 Terminal...")
             print(f"{Fore.YELLOW}   - Custom prompt: [AI2025-Terminal]")
             print(f"{Fore.YELLOW}   - Return command: return_to_menu")
             print(f"{Fore.YELLOW}   - Working directory: {self.ai_env_path}")
-            
+            print(f"{Fore.GREEN}   - Conda found at: {self.conda_path}")
+
             # Create and execute terminal script
             script_path = self.create_terminal_script()
             
