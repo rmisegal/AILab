@@ -1,0 +1,47 @@
+AI2025 Terminal - One-Line Copy-Paste Tests
+==============================================
+
+Copy and paste each line into your AI2025 Terminal:
+
+1. CHECK ENVIRONMENT
+echo Environment: %CONDA_DEFAULT_ENV% ^| Working Dir: %CD% ^| Prompt: %PROMPT%
+
+2. CHECK PYTHON
+python --version && python -c "import sys; print('Executable:', sys.executable)"
+
+3. CHECK TENSORBOARD
+python -c "import tensorboard; print('✅ TensorBoard version:', tensorboard.__version__)"
+
+4. CHECK MLFLOW
+python -c "import mlflow; print('✅ MLflow version:', mlflow.__version__)"
+
+5. CHECK ALL CRITICAL PACKAGES
+python -c "for pkg in ['langchain','streamlit','fastapi','pandas','numpy','torch','tensorboard','mlflow']: exec(f'import {pkg}; print(\"✅ {pkg}: OK\")')"
+
+6. CHECK COMMANDS AVAILABILITY
+pip --version && conda --version && python -c "print('✅ All commands available')"
+
+7. CHECK RETURN COMMAND
+if exist %TEMP%\return_to_menu.bat (echo ✅ Return command exists) else (echo ❌ Return command missing)
+
+8. FULL STATUS CHECK
+python -c "import os,sys;e=os.environ;print('='*50);print('AI2025 Terminal Status');print('='*50);print(f'Conda Env: {e.get(\"CONDA_DEFAULT_ENV\")}');print(f'Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}');print(f'Working Dir: {os.getcwd()}');print(f'AI_ENV_PATH: {e.get(\"AI_ENV_PATH\")}');print('='*50)"
+
+9. QUICK PACKAGE TEST
+python -c "import tensorboard as tb, mlflow as mf, langchain as lc, streamlit as st, fastapi as fa, pandas as pd, numpy as np, torch; print('✅ All 8 core packages imported successfully!')"
+
+10. PORT CHECK (All Services)
+python -c "import socket;ports={'TensorBoard':6006,'MLflow':5000,'Streamlit':8501,'Jupyter':8888};[print(f'{n} (:{p}): {\"🔴 IN USE\" if socket.socket().connect_ex((\"localhost\",p))==0 else \"🟢 AVAILABLE\"}') for n,p in ports.items()]"
+
+11. COMPREHENSIVE ONE-LINER
+python -c "import os,sys,importlib.util as iu;pkgs=['tensorboard','mlflow','langchain','streamlit','fastapi','pandas','numpy','torch'];env=os.environ.get('CONDA_DEFAULT_ENV','?');print('\n'+'='*60);print('🧪 AI2025 TERMINAL QUICK TEST');print('='*60);print(f'Environment: {env} {\"✅\" if env==\"AI2025\" else \"❌\"}');print(f'Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}');print(f'Working Dir: {os.getcwd()}');print(f'Prompt: {os.environ.get(\"PROMPT\",\"?\")[:30]}...');print('\nPackages:');[print(f'  {p:15s} {\"✅ OK\" if iu.find_spec(p) else \"❌ MISSING\"}') for p in pkgs];print('='*60+'\n')"
+
+12. RUN AUTOMATED TEST SUITE
+python test_ai2025_terminal.py
+
+13. RUN QUICK BATCH TESTS
+quick_terminal_tests.bat
+
+==============================================
+COPY ANY LINE ABOVE AND PASTE INTO AI2025 TERMINAL
+==============================================

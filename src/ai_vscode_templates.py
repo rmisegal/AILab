@@ -120,7 +120,32 @@ import os
 from pathlib import Path
 
 # Add AI Environment src to path for module imports
-ai_env_path = Path(os.environ.get('AI_ENV_PATH', 'D:/AI_Environment'))
+# Try environment variable first, then search all drives
+ai_env_path = None
+if 'AI_ENV_PATH' in os.environ:
+    ai_env_path = Path(os.environ['AI_ENV_PATH'])
+else:
+    # Search all drives for AI_Environment
+    import string
+    for letter in string.ascii_uppercase:
+        drive_path = Path(f"{letter}:\\\\")
+        if not drive_path.exists():
+            continue
+        # Check AI_Lab\\AI_Environment (external drives)
+        ai_lab_path = drive_path / "AI_Lab" / "AI_Environment"
+        if ai_lab_path.exists() and (ai_lab_path / "Ollama").exists():
+            ai_env_path = ai_lab_path
+            break
+        # Check Drive:\\AI_Environment (internal drives)
+        ai_env_direct = drive_path / "AI_Environment"
+        if ai_env_direct.exists() and (ai_env_direct / "Ollama").exists():
+            ai_env_path = ai_env_direct
+            break
+
+    if not ai_env_path:
+        print("ERROR: AI_Environment not found on any drive!")
+        sys.exit(1)
+
 sys.path.insert(0, str(ai_env_path / "src"))
 
 import requests

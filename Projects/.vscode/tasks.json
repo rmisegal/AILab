@@ -1,10 +1,10 @@
 {
-  "version": "3.0.28",
+  "version": "2.0.0",
   "tasks": [
     {
       "label": "AI Environment: Run Current File",
       "type": "shell",
-      "command": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "command": "F:/AI_Lab/Miniconda/envs/AI2025/python.exe",
       "args": [
         "${file}"
       ],
@@ -24,9 +24,9 @@
         "cwd": "${workspaceFolder}",
         "env": {
           "CONDA_DEFAULT_ENV": "AI2025",
-          "CONDA_PREFIX": "D:/AI_Environment/Miniconda/envs/AI2025",
-          "PATH": "D:/AI_Environment/Miniconda/envs/AI2025;D:/AI_Environment/Miniconda/envs/AI2025/Scripts;D:/AI_Environment/src;${env:PATH}",
-          "PYTHONPATH": "D:/AI_Environment/src"
+          "CONDA_PREFIX": "F:/AI_Lab/Miniconda/envs/AI2025",
+          "PATH": "F:/AI_Lab/Miniconda/envs/AI2025;F:/AI_Lab/Miniconda/envs/AI2025/Scripts;F:/AI_Lab/src;${env:PATH}",
+          "PYTHONPATH": "F:/AI_Lab/src"
         }
       },
       "problemMatcher": []
@@ -34,9 +34,9 @@
     {
       "label": "AI Environment: Open Main Menu",
       "type": "shell",
-      "command": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "command": "F:/AI_Lab/Miniconda/envs/AI2025/python.exe",
       "args": [
-        "D:/AI_Environment/activate_ai_env.py"
+        "F:/AI_Lab/activate_ai_env.py"
       ],
       "group": "build",
       "presentation": {
@@ -46,10 +46,10 @@
         "panel": "new"
       },
       "options": {
-        "cwd": "D:/AI_Environment",
+        "cwd": "F:/AI_Lab",
         "env": {
           "CONDA_DEFAULT_ENV": "AI2025",
-          "CONDA_PREFIX": "D:/AI_Environment/Miniconda/envs/AI2025"
+          "CONDA_PREFIX": "F:/AI_Lab/Miniconda/envs/AI2025"
         }
       },
       "problemMatcher": []
@@ -57,9 +57,9 @@
     {
       "label": "AI Environment: Test All Components",
       "type": "shell",
-      "command": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
+      "command": "F:/AI_Lab/Miniconda/envs/AI2025/python.exe",
       "args": [
-        "D:/AI_Environment/activate_ai_env.py",
+        "F:/AI_Lab/activate_ai_env.py",
         "test"
       ],
       "group": "test",
@@ -70,7 +70,7 @@
         "panel": "new"
       },
       "options": {
-        "cwd": "D:/AI_Environment"
+        "cwd": "F:/AI_Lab"
       },
       "problemMatcher": []
     }

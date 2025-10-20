@@ -4,7 +4,21 @@
       "Bash(copy:*)",
       "Bash(./run_ai_env.bat)",
       "Bash(where conda.exe)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(cmd /c:*)",
+      "Read(//c/AI_Environment_Installer-main/src/**)",
+      "Read(//c/AI_Environment_Installer-main/**)",
+      "Bash(dir:*)",
+      "Bash(powershell:*)",
+      "Bash(streamlit run:*)",
+      "Bash(timeout:*)",
+      "Read(//f/**)",
+      "Bash(git reset HEAD nul)"
     ],
     "deny": [],
     "ask": []

@@ -192,11 +192,26 @@ class ComponentSetup:
 
 def main():
     """Test component setup"""
-    ai_env_path = Path("D:/AI_Environment")
+    # Search for AI_Environment installation
+    import string
+    ai_env_path = None
+
+    for letter in string.ascii_uppercase:
+        for possible_path in [Path(f"{letter}:\\AI_Lab\\AI_Environment"), Path(f"{letter}:\\AI_Environment")]:
+            if possible_path.exists():
+                ai_env_path = possible_path
+                break
+        if ai_env_path:
+            break
+
+    if not ai_env_path:
+        print("AI_Environment not found on any drive!")
+        return
+
     component_setup = ComponentSetup(ai_env_path)
-    
+
     success = component_setup.setup_all_components()
-    
+
     if success:
         print(f"\n{Fore.GREEN}Component setup completed successfully{Style.RESET_ALL}")
     else:

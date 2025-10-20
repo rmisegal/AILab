@@ -46,7 +46,13 @@ class CondaManager:
     def setup_conda_paths(self, env_name):
         """Setup conda paths in environment variables"""
         env_path = self.conda_path / "envs" / env_name
-        
+
+        # Verify the conda environment actually exists
+        if not env_path.exists():
+            self.print_error(f"Conda environment not found at: {env_path}")
+            self.print_info(f"Please create the '{env_name}' environment first")
+            return False
+
         # Build new PATH with conda paths first (Windows structure)
         conda_paths = [
             str(env_path),
@@ -55,17 +61,18 @@ class CondaManager:
             str(self.conda_path / "Scripts"),
             str(self.conda_path / "Library" / "bin")
         ]
-        
+
         # Get current PATH and prepend conda paths
         current_path = os.environ.get('PATH', '')
         new_path = ';'.join(conda_paths + [current_path])
-        
+
         # Set environment variables
         os.environ['PATH'] = new_path
         os.environ['CONDA_DEFAULT_ENV'] = env_name
         os.environ['CONDA_PREFIX'] = str(env_path)
-        
+
         self.print_info("Conda paths configured")
+        return True
         
     def verify_python_location(self):
         """Verify Python is from D: drive"""
@@ -78,27 +85,19 @@ class CondaManager:
             
             if result.returncode == 0:
                 python_path = result.stdout.strip()
-                # Normalize path for comparison
-                normalized_path = python_path.upper().replace('/', '\\')
-                
-                # Check multiple possible patterns
-                valid_patterns = [
-                    "D:\\AI_ENVIRONMENT",
-                    "D:/AI_ENVIRONMENT", 
-                    "D:\\AI_Environment",
-                    "D:/AI_Environment"
-                ]
-                
-                is_valid = any(pattern in normalized_path for pattern in valid_patterns)
-                
-                if is_valid:
-                    self.print_success(f"Using portable Python: {python_path}")
+                # Normalize paths for comparison
+                normalized_python_path = str(Path(python_path).resolve()).upper()
+                normalized_ai_env_path = str(self.ai_env_path.resolve()).upper()
+
+                # Check if Python is from our AI Environment (preferred) or external installation (acceptable)
+                if normalized_ai_env_path in normalized_python_path:
+                    self.print_success(f"Using portable Python from AI Environment: {python_path}")
                     return True
                 else:
-                    self.print_error(f"Python not from D: drive: {python_path}")
-                    self.print_info(f"Normalized path: {normalized_path}")
-                    self.print_info(f"Looking for patterns: {valid_patterns}")
-                    return False
+                    # Allow external Python installations (like system-wide Miniconda)
+                    self.print_info(f"Using external Python installation: {python_path}")
+                    self.print_info(f"Note: For full portability, install Miniconda in {self.ai_env_path}")
+                    return True  # Changed from False to True to allow external installations
             else:
                 # Fallback: try where command if available
                 try:
@@ -110,24 +109,19 @@ class CondaManager:
                     if result.returncode == 0:
                         python_paths = result.stdout.strip().split('\n')
                         first_python = python_paths[0].strip()
-                        # Use same normalization logic
-                        normalized_path = first_python.upper().replace('/', '\\')
-                        
-                        valid_patterns = [
-                            "D:\\AI_ENVIRONMENT",
-                            "D:/AI_ENVIRONMENT", 
-                            "D:\\AI_Environment",
-                            "D:/AI_Environment"
-                        ]
-                        
-                        is_valid = any(pattern in normalized_path for pattern in valid_patterns)
-                        
-                        if is_valid:
-                            self.print_success(f"Using portable Python: {first_python}")
+                        # Normalize paths for comparison
+                        normalized_python_path = str(Path(first_python).resolve()).upper()
+                        normalized_ai_env_path = str(self.ai_env_path.resolve()).upper()
+
+                        # Check if Python is from our AI Environment (preferred) or external installation (acceptable)
+                        if normalized_ai_env_path in normalized_python_path:
+                            self.print_success(f"Using portable Python from AI Environment: {first_python}")
                             return True
                         else:
-                            self.print_error(f"Python not from D: drive: {first_python}")
-                            return False
+                            # Allow external Python installations (like system-wide Miniconda)
+                            self.print_info(f"Using external Python installation: {first_python}")
+                            self.print_info(f"Note: For full portability, install Miniconda in {self.ai_env_path}")
+                            return True  # Changed from False to True to allow external installations
                     else:
                         self.print_error("Could not locate Python executable")
                         return False
@@ -163,18 +157,22 @@ class CondaManager:
         """Test if conda environment is working"""
         try:
             # Test conda list command
-            result = subprocess.run(['conda', 'list'], 
-                                  capture_output=True, 
-                                  text=True, 
+            result = subprocess.run(['conda', 'list'],
+                                  capture_output=True,
+                                  text=True,
                                   timeout=15)
-            
+
             if result.returncode == 0:
                 self.print_success("Conda environment is functional")
                 return True
             else:
                 self.print_error("Conda environment test failed")
+                if result.stderr:
+                    self.print_error(f"Error output: {result.stderr.strip()}")
+                if result.stdout:
+                    self.print_info(f"Standard output: {result.stdout.strip()}")
                 return False
-                
+
         except Exception as e:
             self.print_error(f"Conda environment test error: {e}")
             return False
@@ -183,14 +181,15 @@ class CondaManager:
         """Activate conda environment"""
         try:
             self.print_info(f"Activating conda environment: {env_name}")
-            
-            # Setup conda paths
-            self.setup_conda_paths(env_name)
-            
+
+            # Setup conda paths - verify environment exists first
+            if not self.setup_conda_paths(env_name):
+                return False
+
             # Verify Python location
             if not self.verify_python_location():
                 return False
-                
+
             # Get Python version
             self.get_python_version()
             
@@ -207,11 +206,22 @@ class CondaManager:
 
 def main():
     """Test conda manager"""
-    conda_path = Path("D:/AI_Environment/Miniconda")
+    from ai_path_finder import find_ai_environment
+
+    ai_env_path = find_ai_environment(verbose=True)
+    if not ai_env_path:
+        print(f"{Fore.RED}AI_Environment not found on any drive!{Style.RESET_ALL}")
+        return
+
+    conda_path = ai_env_path / "Miniconda"
+    if not conda_path.exists():
+        # Try system-wide installation
+        conda_path = Path("C:/ProgramData/miniconda3")
+
     conda_manager = CondaManager(conda_path)
-    
+
     success = conda_manager.activate_environment("AI2025")
-    
+
     if success:
         print(f"\n{Fore.GREEN}Conda environment activation successful{Style.RESET_ALL}")
     else:

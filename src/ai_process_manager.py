@@ -584,9 +584,15 @@ st.dataframe(data.head())
 
 def main():
     """Test background process manager"""
-    ai_env_path = Path("D:/AI_Environment")
+    from ai_path_finder import find_ai_environment
+
+    ai_env_path = find_ai_environment(verbose=True)
+    if not ai_env_path:
+        print(f"{Fore.RED}AI_Environment not found on any drive!{Style.RESET_ALL}")
+        return
+
     process_manager = BackgroundProcessManager(ai_env_path)
-    
+
     print("Testing Background Process Manager...")
     process_manager.list_background_processes()
 

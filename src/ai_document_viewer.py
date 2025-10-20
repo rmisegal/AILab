@@ -42,7 +42,8 @@ class MarkdownFormatter:
             if not self.in_code_block:
                 self.in_code_block = True
                 self.code_block_lang = line.strip()[3:].strip()
-                return f"{Fore.CYAN}┌─ Code Block ({self.code_block_lang or \"text\"}) ─{Style.RESET_ALL}"
+                lang_display = self.code_block_lang or "text"
+                return f"{Fore.CYAN}┌─ Code Block ({lang_display}) ─{Style.RESET_ALL}"
             else:
                 self.in_code_block = False
                 self.code_block_lang = ""
@@ -54,9 +55,11 @@ class MarkdownFormatter:
         
         # Headers
         if line.startswith("# "):
-            return f"{Fore.CYAN}{Style.BRIGHT}{\"=\"*60}{Style.RESET_ALL}\n{Fore.CYAN}{Style.BRIGHT}{line[2:].strip()}{Style.RESET_ALL}\n{Fore.CYAN}{Style.BRIGHT}{\"=\"*60}{Style.RESET_ALL}"
+            sep = "=" * 60
+            return f"{Fore.CYAN}{Style.BRIGHT}{sep}{Style.RESET_ALL}\n{Fore.CYAN}{Style.BRIGHT}{line[2:].strip()}{Style.RESET_ALL}\n{Fore.CYAN}{Style.BRIGHT}{sep}{Style.RESET_ALL}"
         elif line.startswith("## "):
-            return f"{Fore.YELLOW}{Style.BRIGHT}{line[3:].strip()}{Style.RESET_ALL}\n{Fore.YELLOW}{\"-\"*40}{Style.RESET_ALL}"
+            sep = "-" * 40
+            return f"{Fore.YELLOW}{Style.BRIGHT}{line[3:].strip()}{Style.RESET_ALL}\n{Fore.YELLOW}{sep}{Style.RESET_ALL}"
         elif line.startswith("### "):
             return f"{Fore.WHITE}{Style.BRIGHT}{line[4:].strip()}{Style.RESET_ALL}"
         elif line.startswith("#### "):
@@ -66,7 +69,8 @@ class MarkdownFormatter:
         if re.match(r"^\s*[-*+]\s", line):
             indent = len(line) - len(line.lstrip())
             content = re.sub(r"^\s*[-*+]\s", "", line)
-            return f"{\" \" * indent}{Fore.GREEN}•{Style.RESET_ALL} {self.format_inline(content)}"
+            indent_str = " " * indent
+            return f"{indent_str}{Fore.GREEN}•{Style.RESET_ALL} {self.format_inline(content)}"
         
         # Numbered lists
         if re.match(r"^\s*\d+\.\s", line):
@@ -85,7 +89,8 @@ class MarkdownFormatter:
         
         # Horizontal rules
         if re.match(r"^[-=*]{3,}$", line.strip()):
-            return f"{Fore.CYAN}{\"─\" * 60}{Style.RESET_ALL}"
+            sep = "─" * 60
+            return f"{Fore.CYAN}{sep}{Style.RESET_ALL}"
         
         # Blockquotes
         if line.startswith("> "):
@@ -97,22 +102,22 @@ class MarkdownFormatter:
     def format_inline(self, text):
         """Format inline Markdown elements"""
         # Bold text **text** or __text__
-        text = re.sub(r"\*\*(.*?)\*\*", f\'{Fore.WHITE}{Style.BRIGHT}\\1{Style.RESET_ALL}\'", text)
-        text = re.sub(r"__(.*?)__", f\'{Fore.WHITE}{Style.BRIGHT}\\1{Style.RESET_ALL}\'", text)
-        
+        text = re.sub(r"\*\*(.*?)\*\*", Fore.WHITE + Style.BRIGHT + r'\1' + Style.RESET_ALL, text)
+        text = re.sub(r"__(.*?)__", Fore.WHITE + Style.BRIGHT + r'\1' + Style.RESET_ALL, text)
+
         # Italic text *text* or _text_
-        text = re.sub(r"\*(.*?)\*", f\'{Fore.YELLOW}\\1{Style.RESET_ALL}\'", text)
-        text = re.sub(r"_(.*?)_", f\'{Fore.YELLOW}\\1{Style.RESET_ALL}\'", text)
-        
+        text = re.sub(r"\*(.*?)\*", Fore.YELLOW + r'\1' + Style.RESET_ALL, text)
+        text = re.sub(r"_(.*?)_", Fore.YELLOW + r'\1' + Style.RESET_ALL, text)
+
         # Inline code `code`
-        text = re.sub(r"`(.*?)`", f\'{Fore.GREEN}\\1{Style.RESET_ALL}\'", text)
-        
+        text = re.sub(r"`(.*?)`", Fore.GREEN + r'\1' + Style.RESET_ALL, text)
+
         # Links [text](url)
-        text = re.sub(r"\[([^\]]+)\]\([^)]+\)", f\'{Fore.BLUE}\\1{Style.RESET_ALL}\'", text)
-        
+        text = re.sub(r"\[([^\]]+)\]\([^)]+\)", Fore.BLUE + r'\1' + Style.RESET_ALL, text)
+
         # Checkboxes
-        text = re.sub(r"\[x\]", f\'{Fore.GREEN}✓{Style.RESET_ALL}\'", text, flags=re.IGNORECASE)
-        text = re.sub(r"\[ \]", f\'{Fore.RED}☐{Style.RESET_ALL}\'", text)
+        text = re.sub(r"\[x\]", Fore.GREEN + '✓' + Style.RESET_ALL, text, flags=re.IGNORECASE)
+        text = re.sub(r"\[ \]", Fore.RED + '☐' + Style.RESET_ALL, text)
         
         return text
 
@@ -145,17 +150,17 @@ class DocumentViewer:
     def _view_file(self, file_path, title, is_markdown=False):
         """View file with pagination and formatting"""
         try:
-            with open(file_path, \'r\', encoding=\'utf-8\') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
-            
+
             # Format lines if Markdown
             if is_markdown:
                 formatted_lines = []
                 for line in lines:
                     formatted = self.formatter.format_line(line.rstrip())
                     # Handle multi-line formatted output (like headers)
-                    if \'\n\' in formatted:
-                        formatted_lines.extend(formatted.split(\'\n\'))
+                    if '\n' in formatted:
+                        formatted_lines.extend(formatted.split('\n'))
                     else:
                         formatted_lines.append(formatted)
                 lines = formatted_lines
@@ -174,16 +179,16 @@ class DocumentViewer:
                     break
                 
                 choice = self._get_navigation_choice(current_page, total_pages)
-                
-                if choice == \'q\':
+
+                if choice == 'q':
                     break
-                elif choice == \'n\' and current_page < total_pages:
+                elif choice == 'n' and current_page < total_pages:
                     current_page += 1
-                elif choice == \'p\' and current_page > 1:
+                elif choice == 'p' and current_page > 1:
                     current_page -= 1
-                elif choice == \'t\':
+                elif choice == 't':
                     current_page = 1
-                elif choice == \'b\':
+                elif choice == 'b':
                     current_page = total_pages
                 elif choice.isdigit():
                     page_num = int(choice)
@@ -196,32 +201,33 @@ class DocumentViewer:
     def _format_text_line(self, line):
         """Basic formatting for non-Markdown text files"""
         # Highlight version numbers
-        line = re.sub(r\"v?\\d+\\.\\d+\\.\\d+\", f\'{Fore.CYAN}\\g<0>{Style.RESET_ALL}\'", line)
-        
+        line = re.sub(r"v?\d+\.\d+\.\d+", Fore.CYAN + r'\g<0>' + Style.RESET_ALL, line)
+
         # Highlight dates
-        line = re.sub(r\"\\d{4}-\\d{2}-\\d{2}\", f\'{Fore.YELLOW}\\g<0>{Style.RESET_ALL}\'", line)
-        
+        line = re.sub(r"\d{4}-\d{2}-\d{2}", Fore.YELLOW + r'\g<0>' + Style.RESET_ALL, line)
+
         # Highlight SUCCESS/ERROR/WARNING
-        line = re.sub(r\"\\[SUCCESS\\]\", f\'{Fore.GREEN}[SUCCESS]{Style.RESET_ALL}\'", line)
-        line = re.sub(r\"\\[ERROR\\]\", f\'{Fore.RED}[ERROR]{Style.RESET_ALL}\'", line)
-        line = re.sub(r\"\\[WARNING\\]\", f\'{Fore.YELLOW}[WARNING]{Style.RESET_ALL}\'", line)
-        line = re.sub(r\"\\[INFO\\]\", f\'{Fore.CYAN}[INFO]{Style.RESET_ALL}\'", line)
-        
+        line = re.sub(r"\[SUCCESS\]", Fore.GREEN + '[SUCCESS]' + Style.RESET_ALL, line)
+        line = re.sub(r"\[ERROR\]", Fore.RED + '[ERROR]' + Style.RESET_ALL, line)
+        line = re.sub(r"\[WARNING\]", Fore.YELLOW + '[WARNING]' + Style.RESET_ALL, line)
+        line = re.sub(r"\[INFO\]", Fore.CYAN + '[INFO]' + Style.RESET_ALL, line)
+
         # Highlight file paths
-        line = re.sub(r\"[A-Za-z]:\\\\[^\\s]+\", f\'{Fore.BLUE}\\g<0>{Style.RESET_ALL}\'", line)
-        
+        line = re.sub(r"[A-Za-z]:\\[^\s]+", Fore.BLUE + r'\g<0>' + Style.RESET_ALL, line)
+
         return line
     
     def _display_page(self, lines, current_page, total_pages, title):
         """Display a single page of content"""
         start_idx = (current_page - 1) * self.lines_per_page
         end_idx = min(start_idx + self.lines_per_page, len(lines))
-        
+
         # Clear screen and show header
-        os.system(\'cls\' if os.name == \'nt\' else \'clear\')
-        print(f"{Fore.CYAN}{\"=\"*70}{Style.RESET_ALL}")
+        os.system('cls' if os.name == 'nt' else 'clear')
+        sep = "=" * 70
+        print(f"{Fore.CYAN}{sep}{Style.RESET_ALL}")
         print(f"{Fore.CYAN}{title} - Page {current_page}/{total_pages}{Style.RESET_ALL}")
-        print(f"{Fore.CYAN}{\"=\"*70}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{sep}{Style.RESET_ALL}")
         print()
         
         # Display content
@@ -235,7 +241,8 @@ class DocumentViewer:
     
     def _get_navigation_choice(self, current_page, total_pages):
         """Get user navigation choice"""
-        print(f"{Fore.CYAN}{\"─\"*70}{Style.RESET_ALL}")
+        sep = "─" * 70
+        print(f"{Fore.CYAN}{sep}{Style.RESET_ALL}")
         print(f"{Fore.WHITE}Navigation:{Style.RESET_ALL}")
         
         nav_options = []
@@ -251,21 +258,21 @@ class DocumentViewer:
             f"{Fore.GREEN}Q{Style.RESET_ALL}uit"
         ])
         
-        print(f"  {\' | \'.join(nav_options)}")
-        
+        print(f"  {' | '.join(nav_options)}")
+
         while True:
             choice = input(f"\n{Fore.WHITE}Enter choice: {Style.RESET_ALL}").strip().lower()
-            
-            if choice in [\'q\', \'quit\', \'exit\']:
-                return \'q\'
-            elif choice in [\'n\', \'next\'] and current_page < total_pages:
-                return \'n\'
-            elif choice in [\'p\', \'prev\', \'previous\'] and current_page > 1:
-                return \'p\'
-            elif choice in [\'t\', \'top\']:
-                return \'t\'
-            elif choice in [\'b\', \'bottom\']:
-                return \'b\'
+
+            if choice in ['q', 'quit', 'exit']:
+                return 'q'
+            elif choice in ['n', 'next'] and current_page < total_pages:
+                return 'n'
+            elif choice in ['p', 'prev', 'previous'] and current_page > 1:
+                return 'p'
+            elif choice in ['t', 'top']:
+                return 't'
+            elif choice in ['b', 'bottom']:
+                return 'b'
             elif choice.isdigit():
                 page_num = int(choice)
                 if 1 <= page_num <= total_pages:
@@ -278,14 +285,14 @@ class DocumentViewer:
 def main():
     """Main function for standalone execution"""
     import argparse
-    
-    parser = argparse.ArgumentParser(description=\'AI Environment Document Viewer\')
-    parser.add_argument(\'--ai-env-path\', default=\'.\', 
-                       help=\'Path to AI Environment directory\')
-    parser.add_argument(\'--readme\', action=\'store_true\',
-                       help=\'View README.md\')
-    parser.add_argument(\'--package-info\', action=\'store_true\',
-                       help=\'View PACKAGE_INFO.txt\')
+
+    parser = argparse.ArgumentParser(description='AI Environment Document Viewer')
+    parser.add_argument('--ai-env-path', default='.',
+                       help='Path to AI Environment directory')
+    parser.add_argument('--readme', action='store_true',
+                       help='View README.md')
+    parser.add_argument('--package-info', action='store_true',
+                       help='View PACKAGE_INFO.txt')
     
     args = parser.parse_args()
     

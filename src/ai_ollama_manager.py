@@ -353,9 +353,15 @@ class OllamaManager:
 
 def main():
     """Test Ollama manager"""
-    ai_env_path = Path("D:/AI_Environment")
+    from ai_path_finder import find_ai_environment
+
+    ai_env_path = find_ai_environment(verbose=True)
+    if not ai_env_path:
+        print("AI_Environment not found on any drive!")
+        return
+
     ollama_manager = OllamaManager(ai_env_path)
-    
+
     print("Testing Ollama Manager...")
     ollama_manager.show_ollama_status()
 

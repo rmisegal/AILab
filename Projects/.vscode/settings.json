@@ -1,7 +1,7 @@
 {
-  "python.defaultInterpreterPath": "D:/AI_Environment/Miniconda/envs/AI2025/python.exe",
-  "python.condaPath": "D:/AI_Environment/Miniconda/Scripts/conda.exe",
-  "python.venvPath": "D:/AI_Environment/Miniconda/envs",
+  "python.defaultInterpreterPath": "F:/AI_Lab/Miniconda/envs/AI2025/python.exe",
+  "python.condaPath": "F:/AI_Lab/Miniconda/Scripts/conda.exe",
+  "python.venvPath": "F:/AI_Lab/Miniconda/envs",
   "python.terminal.activateEnvironment": true,
   "python.terminal.activateEnvInCurrentTerminal": true,
   "terminal.integrated.defaultProfile.windows": "AI2025-Terminal",
@@ -10,8 +10,8 @@
       "path": "cmd.exe",
       "args": [
         "/k",
-        "D:/AI_Environment/Miniconda/Scripts/activate.bat",
-        "D:/AI_Environment/Miniconda/envs/AI2025",
+        "F:/AI_Lab/Miniconda/Scripts/activate.bat",
+        "F:/AI_Lab/Miniconda/envs/AI2025",
         "&&",
         "echo [AI2025-Terminal] Environment Active - Type 'python activate_ai_env.py' to access main menu"
       ],
@@ -34,16 +34,16 @@
   "python.linting.enabled": true,
   "python.linting.pylintEnabled": false,
   "python.linting.flake8Enabled": true,
-  "python.linting.flake8Path": "D:/AI_Environment/Miniconda/envs/AI2025/Scripts/flake8.exe",
+  "python.linting.flake8Path": "F:/AI_Lab/Miniconda/envs/AI2025/Scripts/flake8.exe",
   "python.formatting.provider": "autopep8",
-  "python.formatting.autopep8Path": "D:/AI_Environment/Miniconda/envs/AI2025/Scripts/autopep8.exe",
+  "python.formatting.autopep8Path": "F:/AI_Lab/Miniconda/envs/AI2025/Scripts/autopep8.exe",
   "files.associations": {
     "*.py": "python"
   },
   "files.autoSave": "onFocusChange",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
+    "source.organizeImports": true
   },
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.autoImportCompletions": true,

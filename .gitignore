@@ -1,7 +1,11 @@
-Miniconda/ 
-downloads/ 
-Logs/ 
-new versions/ 
-Ollama/ 
-VSCode/ 
-Tools/ 
+Miniconda/
+downloads/
+Logs/
+new versions/
+Ollama/
+VSCode/
+Tools/
+__pycache__/
+*.pyc
+*.pyo
+nul

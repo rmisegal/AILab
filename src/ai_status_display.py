@@ -26,7 +26,9 @@ class StatusDisplay:
     """Displays AI Environment status and completion information"""
     
     def __init__(self):
-        self.ai_env_path = Path("D:/AI_Environment")
+        # Get the script's directory (src/) and go up one level to AI_Environment root
+        script_dir = Path(__file__).resolve().parent
+        self.ai_env_path = script_dir.parent
         
     def show_completion_status(self):
         """Show environment completion status"""

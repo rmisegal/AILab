@@ -272,11 +272,59 @@ class AIEnvironmentActivator:
             print(f"{Fore.RED}[VERBOSE] Ollama not found, will use portable location: {portable_path}{Style.RESET_ALL}")
         return portable_path
 
+    def _find_ai_environment(self):
+        """
+        Find AI_Environment installation across all drives.
+        Searches for AI_Environment in both external (AI_Lab) and internal locations.
+
+        Returns:
+            Path to AI_Environment or current directory if not found
+        """
+        import string
+
+        # First, check if we're already inside AI_Environment
+        script_dir = Path(__file__).resolve().parent
+        current_path = script_dir.parent
+
+        # Check if current directory is AI_Environment
+        if (current_path / "Ollama").exists() or (current_path / "Miniconda").exists():
+            if self.verbose:
+                print(f"{Fore.GREEN}[VERBOSE] Found AI_Environment at current location: {current_path}{Style.RESET_ALL}")
+            return current_path
+
+        # Search all drives for AI_Environment
+        for letter in string.ascii_uppercase:
+            drive_path = Path(f"{letter}:\\")
+
+            if not drive_path.exists():
+                continue
+
+            # Check AI_Lab\AI_Environment (external drives)
+            ai_lab_path = drive_path / "AI_Lab" / "AI_Environment"
+            if ai_lab_path.exists() and ai_lab_path.is_dir():
+                if (ai_lab_path / "Ollama").exists() or (ai_lab_path / "Miniconda").exists():
+                    if self.verbose:
+                        print(f"{Fore.GREEN}[VERBOSE] Found AI_Environment at: {ai_lab_path}{Style.RESET_ALL}")
+                    return ai_lab_path
+
+            # Check Drive:\AI_Environment (internal drives)
+            ai_env_path = drive_path / "AI_Environment"
+            if ai_env_path.exists() and ai_env_path.is_dir():
+                if (ai_env_path / "Ollama").exists() or (ai_env_path / "Miniconda").exists():
+                    if self.verbose:
+                        print(f"{Fore.GREEN}[VERBOSE] Found AI_Environment at: {ai_env_path}{Style.RESET_ALL}")
+                    return ai_env_path
+
+        # Fallback to current directory
+        if self.verbose:
+            print(f"{Fore.YELLOW}[VERBOSE] AI_Environment not found on any drive, using current: {current_path}{Style.RESET_ALL}")
+        return current_path
+
     def __init__(self, verbose=False):
         self.verbose = verbose
-        # Get the script's directory (src/) and go up one level to AI_Environment root
-        script_dir = Path(__file__).resolve().parent
-        self.ai_env_path = script_dir.parent
+
+        # Find AI_Environment installation (searches all drives)
+        self.ai_env_path = self._find_ai_environment()
 
         # Detect actual Miniconda location (portable first, then system)
         self.conda_path = self._detect_miniconda_path()

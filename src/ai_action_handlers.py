@@ -91,7 +91,7 @@ class ActionHandlers:
             path_manager = PathManager()
             # Only remove duplicate AI Environment paths, not all of them
             current_path = path_manager.get_current_path()
-            if "D:\\AI_Environment" in current_path:
+            if "\\AI_Environment" in current_path:
                 self.print_info("Removing duplicate AI Environment paths...")
                 # This is a lighter cleanup that preserves conda paths
                 self.print_success("Duplicate paths cleaned")
@@ -547,11 +547,26 @@ class ActionHandlers:
 
 def main():
     """Test action handlers"""
-    ai_env_path = Path("D:/AI_Environment")
+    # Search for AI_Environment installation
+    import string
+    ai_env_path = None
+
+    for letter in string.ascii_uppercase:
+        for possible_path in [Path(f"{letter}:\\AI_Lab\\AI_Environment"), Path(f"{letter}:\\AI_Environment")]:
+            if possible_path.exists():
+                ai_env_path = possible_path
+                break
+        if ai_env_path:
+            break
+
+    if not ai_env_path:
+        print("AI_Environment not found on any drive!")
+        return
+
     conda_path = ai_env_path / "Miniconda"
-    
+
     handlers = ActionHandlers(ai_env_path, conda_path)
-    
+
     # Test status action
     handlers.action_show_status()
 
